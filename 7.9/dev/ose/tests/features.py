@@ -47,9 +47,9 @@ gateway[OrderRes.VOLA] = UNSUPPORTED
 # OrderMod Support
 ##############################################################################
 gateway[OrderMod.NONE] = SUPPORTED
-gateway[OrderMod.STOP] = SUPPORTED
-gateway[OrderMod.IF_TOUCHED] = SUPPORTED
 
+gateway[OrderMod.STOP] = UNSUPPORTED
+gateway[OrderMod.IF_TOUCHED] = UNSUPPORTED
 gateway[OrderMod.BEST_ONLY] = UNSUPPORTED
 gateway[OrderMod.AUTO_AGRESS] = UNSUPPORTED
 gateway[OrderMod.LMTL] = UNSUPPORTED
@@ -72,8 +72,8 @@ gateway[Tif.GIS] = UNSUPPORTED
 gateway[ProductType.FSPREAD] = SUPPORTED
 gateway[ProductType.FUTURE] = SUPPORTED
 gateway[ProductType.OPTION] = SUPPORTED
+gateway[ProductType.OSTRATEGY] = SUPPORTED
 
-gateway[ProductType.OSTRATEGY] = UNSUPPORTED
 gateway[ProductType.ENERGY] = UNSUPPORTED
 gateway[ProductType.STOCK] = UNSUPPORTED
 gateway[ProductType.INDEX] = UNSUPPORTED
@@ -84,7 +84,7 @@ gateway[ProductType.INDEX] = UNSUPPORTED
 #gateway.unsupported_accepts_hold.insert_combo(ProductType.OSTRATEGY, Tif.GTDATE)
 gateway.unsupported_accepts_hold.insert_combo(OrderMod.AUTO_AGRESS, Tif.GTD)
 gateway.unsupported_accepts_hold.insert_combo(OrderMod.BEST_ONLY, Tif.GTD)
-gateway.unsupported_accepts_hold.insert_combo(OrderMod.IF_TOUCHED, ProductType.FSPREAD)
+#gateway.unsupported_accepts_hold.insert_combo(OrderMod.IF_TOUCHED, ProductType.FSPREAD)
 #gateway.unsupported_accepts_hold.insert_combo(OrderMod.STOP, OrderRes.FOK)
 #gateway.unsupported_accepts_hold.insert_combo(OrderMod.STOP, ProductType.OPTION)
 #gateway.unsupported_accepts_hold.insert_combo(OrderMod.STOP, ProductType.OSTRATEGY)
@@ -93,6 +93,7 @@ gateway.unsupported_accepts_hold.insert_combo(OrderType.BATCH, Tif.GTD)
 gateway.unsupported_accepts_hold.insert_combo(OrderType.BEST_LIMIT, Tif.GTD)
 gateway.unsupported_accepts_hold.insert_combo(OrderType.CROSS, Tif.GTD)
 gateway.unsupported_accepts_hold.insert_combo(OrderType.MARKET, Tif.GTC)
+gateway.unsupported_accepts_hold.insert_combo(OrderType.MARKET, Tif.GTDATE)
 gateway.unsupported_accepts_hold.insert_combo(OrderRes.IOC, Tif.GTC)
 gateway.unsupported_accepts_hold.insert_combo(OrderRes.FOK, Tif.GTC)
 gateway.unsupported_accepts_hold.insert_combo(OrderRes.IOC, Tif.GTDATE)
@@ -139,6 +140,10 @@ def get_order_info_flags(order_info):
 #            retval.across_prices = OrderServerFlags.UNSUPPORTED
 #    if order_info.tif == Tif.GTD:
 #        retval.os_restart = OrderServerFlags.UNCHANGED
+    if order_info.res is OrderRes.IOC:
+        retval.onhold_rep_sub_ifill = OrderServerFlags.EXPECT_REJECT
+    if order_info.res is OrderRes.FOK:
+        retval.onhold_rep_sub_ifill = OrderServerFlags.EXPECT_REJECT
     return retval
 
 def get_reject_order_info(field):
@@ -153,7 +158,7 @@ def get_market_finder_config(order_info):
 
     mf_config = MarketFinderConfigData()
     mf_config.timeout = 500
-    mf_config.depth = 20
+    mf_config.depth = 18
     mf_config.maxTriesPerProduct = 12
     mf_config.useCache = True
     mf_config.fixLotQty = True
@@ -166,7 +171,10 @@ def get_market_finder_config(order_info):
                               re.compile('.*series is not traded in CLICK XT.*'))
     mf_config.acceptable_reject_messages = ['No qty filled or placed in order book; EX: omniapi_tx_ex() returned 0 with txstat 1',
                                             'EX: transaction aborted (Order-book volume was too low to fill order.)',
-                                            'GTDate orders cannot be FOK or IOC.']
+                                            'GTDate orders cannot be FOK or IOC.',
+                                            'Order type BL not supported.',
+                                            'EX: invalid transaction type (Successful completion)',
+                                            'EX: transaction aborted (Given time validity is not allowed.)']
 
     if order_info.prod_type == ProductType.OPTION:
         mf_config.maxTriesPerProduct = 120
@@ -181,18 +189,18 @@ def get_market_finder_config(order_info):
         mf_config.defaultBestPrice = 1.00
         mf_config.ignoreLegs = True
         return mf_config
-    if order_info.mod == OrderMod.STOP:
-        mf_config.name = 'STOP orders'
-        mf_config.depth = 0
-        mf_config.stopTicks = 1
-        mf_config.limitTicks = 6
-        return mf_config
-    if order_info.mod == OrderMod.IF_TOUCHED:
-        mf_config.name = 'IF TOUCHED orders'
-        mf_config.depth = 0
-        mf_config.stopTicks = 1
-        mf_config.limitTicks = 6
-        return mf_config
+#    if order_info.mod == OrderMod.STOP:
+#        mf_config.name = 'STOP orders'
+#        mf_config.depth = 0
+#        mf_config.stopTicks = 1
+#        mf_config.limitTicks = 6
+#        return mf_config
+#    if order_info.mod == OrderMod.IF_TOUCHED:
+#        mf_config.name = 'IF TOUCHED orders'
+#        mf_config.depth = 0
+#        mf_config.stopTicks = 1
+#        mf_config.limitTicks = 6
+#        return mf_config
     else:
         return mf_config
 

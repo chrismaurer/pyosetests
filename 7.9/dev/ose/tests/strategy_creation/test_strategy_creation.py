@@ -21,5 +21,5 @@ class TestTailorMadeCombinations(BaseTestStrategyCreation):
         self.leg_mf_config = mf_option_config
         self.strat_creation_mf_config = mf_multi_leg_config
         self.post_creation_pause = 20
-        self.intra_prod_product_names = (('JGBL', 'NK225', 'TOPIX'))
+        self.intra_prod_product_names = (('JGBL', 'JN400', 'TOPIX', 'NK225', 'NK225W'))
         self.exclude_scenarios = ['create_inverted_strategy_exch_reject']

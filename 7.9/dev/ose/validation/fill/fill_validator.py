@@ -1,7 +1,7 @@
 from basis_validation import basis_conditions, basis_fill_roundtrip
 
-import roundtrip_rules as hkex_fill_roundtrip
-import conditions as hkex_fill_conditions
+#import roundtrip_rules as hkex_fill_roundtrip
+#import conditions as hkex_fill_conditions
 
 from basis_validation import *
 
@@ -46,7 +46,6 @@ def setup_fill(fill_table):
     
 #    ids_table.add_rule(tmx_transaction_identifier_is_empty_or_not)
 #    ids_table.override_rule('transaction_identifier_is_not_empty', 'True', None,note='Running tmx_transaction_identifier_is_empty_or_not',)
-    ids_table.optout_rule('transaction_identifier_is_not_empty', 'True', None, note='Temp Optout')
     ids_table.optout_rule('legs_transaction_identifier_is_empty', 'True', None, note='Running order_feed_and_fill_feed_transaction_no instead')
     ids_table.optout_rule('non_legs_transaction_identifier_is_not_empty', 'True', None, note='Running order_feed_and_fill_feed_transaction_no instead')
     ids_table.add_rule(order_feed_and_fill_feed_transaction_no, cond='True')

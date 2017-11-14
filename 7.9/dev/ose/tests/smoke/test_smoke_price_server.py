@@ -10,7 +10,7 @@ from commontests.utils import register_crews
 from ose.tests.utils import (mf_config, futures_filter, bounds_1_20, bounds_6_10, bounds_1_10)
 
 # Overrides
-from ose.tests.overrides import ose_price_overrides
+from ose.tests.overrides import ose_price_overrides, ose_tradestate_overrides
 
 __all__ = ['TestAggMarketSmoke', 'TestInsideMarketSmoke',
            'TestNTDTimeAndSalesFuturesSmoke', 'TestVAPSmoke']
@@ -58,7 +58,7 @@ class TestNTDTimeAndSalesFuturesSmoke(BaseTestNTDTimeAndSalesSmoke):
 
         self.accumulate_ltq = False
         self.restart_timeout = 300
-        self.overrides = ose_price_overrides
+        self.overrides = ose_tradestate_overrides
 
 class TestVAPSmoke(BaseTestVapSmoke):
 

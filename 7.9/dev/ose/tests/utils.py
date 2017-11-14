@@ -58,12 +58,12 @@ bounds_1_35 = PositiveIntegerBounds(1,35)
 bounds_5_7 = PositiveIntegerBounds(5,7)
 bounds_5_10 = PositiveIntegerBounds(5,10)
 bounds_6_10 = PositiveIntegerBounds(6,10)
-bounds_20_50 = PositiveIntegerBounds(20,50)
+bounds_20_50 = PositiveIntegerBounds(20,42)
 #####################################################################################
 
 mf_config = MarketFinderConfigData()
 mf_config.timeout = 500
-mf_config.depth = 20
+mf_config.depth = 30
 mf_config.maxTriesPerProduct = 12
 mf_config.useCache = True
 mf_config.fixLotQty = False
@@ -76,12 +76,15 @@ mf_config.failPatterns = [re.compile('.*Illegal transaction at this time.*'),
                           re.compile('.*series is not traded in CLICK XT.*')]
 mf_config.acceptable_reject_messages = ['No qty filled or placed in order book; EX: omniapi_tx_ex() returned 0 with txstat 1',
                                         'EX: transaction aborted (Order-book volume was too low to fill order.)',
-                                        'GTDate orders cannot be FOK or IOC.']
+                                        'GTDate orders cannot be FOK or IOC.',
+                                        'Order type BL not supported.',
+                                        'EX: invalid transaction type (Successful completion)',
+                                        'EX: transaction aborted (Given time validity is not allowed.)']
 
 mf_option_config = deepcopy(mf_config)
 mf_option_config.maxTriesPerProduct = 120
 mf_option_config.useDefaultBestPriceFirst = True
-mf_option_config.defaultBestPrice = 3.00
+mf_option_config.defaultBestPrice = 20.00
 
 mf_multi_leg_config = deepcopy(mf_config)
 mf_multi_leg_config.maxTriesPerProduct = 80
@@ -89,12 +92,15 @@ mf_multi_leg_config.useDefaultBestPriceFirst = True
 mf_multi_leg_config.defaultBestPrice = 1.00
 mf_multi_leg_config.ignoreLegs = True
 
-ProductGroup.OPTION.register(['JGBL', 'NK225', 'TOPIX'])
-ProductGroup.OSTRATEGY.register(['JGBL', 'NK225', 'TOPIX'])
 
-futures_filter = [ProductType.FUTURE, ContractFilter.TRADABLE]
-fspread_filter = [ProductType.FSPREAD, ContractFilter.TRADABLE]
-option_filter = [ProductType.OPTION, ContractFilter.TRADABLE, ProductGroup.OPTION]
+#ProductGroup.FUTURE.register(['MOTHE', ])
+#ProductGroup.OPTION.register(['1306', '1309', '2432'])
+#ProductGroup.FSPREAD.register(['MOTHE', ])
+ProductGroup.OSTRATEGY.register(['JGBL', 'JN400', 'TOPIX', 'NK225', 'NK225W'])
+
+futures_filter = [ProductType.FUTURE, ContractFilter.TRADABLE]#, ProductGroup.FUTURE]
+fspread_filter = [ProductType.FSPREAD, ContractFilter.TRADABLE]#, ProductGroup.FSPREAD]
+option_filter = [ProductType.OPTION, ContractFilter.TRADABLE]#, ProductGroup.OPTION]
 ostrategy_filter = [ProductType.OSTRATEGY, ContractFilter.TRADABLE, ProductGroup.OSTRATEGY]
 outrights = [ProductType.OUTRIGHT, ContractFilter.TRADABLE]
 intra_prod_mleg = [ProductType.INTRA_PROD_MULTI_LEG, ContractFilter.TRADABLE]
@@ -135,7 +141,7 @@ option_call_preds = [ProductType.OPTION, ContractFilter.TRADABLE, call_filter]
 option_put_preds = [ProductType.OPTION, ContractFilter.TRADABLE, put_filter]
 Strategy.NSC_TWO_LEGS.register({'legs':[StrategyLeg(base_preds=option_call_preds,
                                                     leg_preds=None,
-                                                    qty_ratio=1,
+                                                    qty_ratio=2,
                                                     buy_sell=aenums.TT_BUY),
                                         StrategyLeg(base_preds=option_put_preds,
                                                     leg_preds=[('contr_exp', eq, 1),
@@ -228,7 +234,7 @@ Strategy.INVALID.register({'legs':[StrategyLeg(base_preds=option_call_preds,
                            'tt_prod_type':aenums.TT_PROD_OSTRATEGY,
                            'tt_strategy_code':aenums.TT_TAILOR_MADE_COMB_ID})
 Messages.SERIES_CREATE_SUCCESS.register('Spread/Strategy created successfully')
-Messages.SERIES_CREATE_REJECT.register(r'DC3, EX: transaction aborted (Illegal ratio between the legs.)')
+Messages.SERIES_CREATE_REJECT.register('DC3, EX: transaction aborted \(Illegal ratio between the legs\.\)')
 Messages.SERIES_CREATE_INVERT_REJECT.register('You made a poopy strategy!')
 
 ###################################

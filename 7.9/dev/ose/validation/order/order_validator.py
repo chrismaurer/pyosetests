@@ -38,10 +38,10 @@ def setup_order(order_table):
     order_table.replace_condition('is_exchange_reject', omapi_order_conditions.is_exchange_reject)
     order_table.replace_condition('does_exchange_send_timestamp', omapi_order_conditions.does_exchange_send_timestamp)
 
+    # adds
     order_table.add_condition(basis_order_conditions.is_order_restrict_sent_none)
     order_table.add_condition(basis_order_conditions.is_order_flags_sent_if_touched)
     order_table.add_condition(basis_order_conditions.is_order_flags_sent_stop)
-
     order_table.add_condition(omapi_order_conditions.order_status_was_hold)
 
     ##################
@@ -94,15 +94,17 @@ def setup_order(order_table):
                             or is_book_order_status_hold or is_order_status_reject)')
     ids_table.append_condition('exchange_order_id_is_not_empty', cond='is_order_action_resubmit and is_order_status_ok')
     ids_table.append_condition('exchange_order_id_is_not_empty', cond='is_order_action_change and is_order_status_reject')
-    
-    
+
     ids_table.add_rule(basis_order_roundtrip.exchange_order_id_is_exchange_order_id_book,
                        cond='(order_status_was_hold and not is_order_action_resubmit)\
                             or (is_order_action_delete and not is_order_status_reject)')
     
+#    ids_table.append_condition('exchange_order_id_is_exchange_order_id_book',
+#                               cond='(order_status_was_hold and not is_order_action_resubmit or is_order_action_inquire)\
+#                                    or (is_order_action_delete and not is_order_status_reject)')
+
     ids_table.append_condition('exchange_order_id_is_exchange_order_id_book',
-                               cond='(order_status_was_hold and not is_order_action_resubmit or is_order_action_inquire)\
-                                    or (is_order_action_delete and not is_order_status_reject)')
+                               cond='(is_order_action_delete and not is_order_status_reject)')
     
     ids_table.add_rule(basis_order_roundtrip.exchange_order_id_is_empty,
                        cond='((is_order_action_add) and (is_order_status_hold or is_order_status_reject)) \
@@ -119,14 +121,9 @@ def setup_order(order_table):
 
     # order_no_old
     ids_table.add_rule(basis_order_roundtrip.order_no_old_is_order_no_book, cond='not (is_order_action_orig_void or (is_order_action_add and not is_order_action_orig_replace))')
-    #ids_table.append_condition('is_order_action_add and is_order_status_reject)')
     ids_table.append_condition('order_no_old_is_order_no_book', 'is_action_WaitForTrigger')
     ids_table.add_rule(basis_order_roundtrip.order_no_old_is_order_no_old_sent, cond='is_order_action_orig_void and not is_action_WaitForTrigger')
     
-    #ids_table.add_rule(basis_order_roundtrip.order_no_old_is_order_no_sent, add
-    #is it an add? is it a reject was it originally a replace?  
-    #book - never run this rule with new orders... 
-
     # round_trip_id
     if srvr_vrmf.version == 7 and srvr_vrmf.release < 17:
         v, r = os.environ['TT_COMMONTESTS_VERSION'].split('.')

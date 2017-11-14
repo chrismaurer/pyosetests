@@ -46,6 +46,10 @@ def is_unsolicited_delete(action, before, after):
 #    return does_exchange_send_timestamp(action, before, after)
 
 def is_gateway_reject(action, before, after):
+
+    if after.pending.order_status == aenums.TT_ORDER_STATUS_OK:
+        return False
+
     if before.order_session.feed_down:
         print 'NUMBER 1!!!!!!'
         return True
@@ -91,7 +95,7 @@ def is_gateway_reject(action, before, after):
         (before.pending.order_action == aenums.TT_ORDER_ACTION_RESUBMIT and
         after.pending.order_status == aenums.TT_ORDER_STATUS_REJECTED)) and
         before.book and before.pending.tif != before.book.tif and 
-        before.pending.tif == str(cppclient.GIS_Date)):
+        before.pending.tif in [str(cppclient.GIS_Date), str(cppclient.GTC)]):
         print 'NUMBER 10!!!!!!'
         return True
            
@@ -174,7 +178,7 @@ def is_gateway_reject(action, before, after):
         return True
 
     if hasattr(action, 'order_status'):
-        if action.order_status == 'Risk Reject':
+        if action.order_status == 'Risk Reject' or action.order_status == 'Risk Account':
             print 'NUMBER 23!!!!!!'
             return True
 
@@ -186,6 +190,8 @@ def is_exchange_reject(action, before, after):
 
 def is_order_sent_to_exchange(action, before, after):
     if is_risk_reject(action, before, after):
+        return False
+    if is_gateway_reject(action, before, after):
         return False
     if ((after.pending.order_action == aenums.TT_ORDER_ACTION_ADD or
          after.pending.order_action == aenums.TT_ORDER_ACTION_INQUIRE or

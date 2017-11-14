@@ -21,6 +21,7 @@ spqc = Override(PriceQuantityChange, Small_Price_Qty_Chg_Predicate())
 SPQC_SET = OverrideSets([[Override()], [spqc]])
 
 ose_price_overrides = []
+ose_tradestate_overrides = []
 
 #Predicate for OSE DeleteOrder
 class OSE_HoldOrder_Predicate(object):
@@ -203,7 +204,10 @@ class OMAPISetExpectedNonTradeDataFromFills(SetExpectedNonTradeDataFromFills):
                 # get Trade state
                 ts = get_last_price_value(aenums.TT_TRADE_STATE, ctx)
                 # set Trade state
-                new_ts = (aenums.TT_PRICE_STATE_ASK if self.resting_side == aenums.TT_BUY else
+                if ts == 0:
+                    new_ts = 0
+                else:
+                    new_ts = (aenums.TT_PRICE_STATE_ASK if self.resting_side == aenums.TT_BUY else
                                aenums.TT_PRICE_STATE_BID)
                 if new_ts != ts:
                     update_ctx_prices(ctx, aenums.TT_TRADE_STATE, new_ts)
@@ -214,8 +218,6 @@ class OMAPISetExpectedNonTradeDataFromFills(SetExpectedNonTradeDataFromFills):
                 # for override, set high_price on ctx.price_changes as well
                 if (high_prc == cppclient.TT_INVALID_PRICE) or (high_prc < new_ltp):
                     ctx.price_changes[aenums.TT_HIGH_PRC].append(new_ltp)
-                else:
-                    ctx.price_changes[aenums.TT_HIGH_PRC].append(high_prc)
 
                 # get low price
                 low_prc = get_last_price_value(aenums.TT_LOW_PRC, ctx)
@@ -223,16 +225,10 @@ class OMAPISetExpectedNonTradeDataFromFills(SetExpectedNonTradeDataFromFills):
                 # for override, set low_price on ctx.price_changes as well
                 if (low_prc == cppclient.TT_INVALID_PRICE) or (low_prc > new_ltp):
                     ctx.price_changes[aenums.TT_LOW_PRC].append(new_ltp)
-                else:
-                    ctx.price_changes[aenums.TT_LOW_PRC].append(low_prc)
 
                 # set open if it does not exist
                 if aenums.TT_OPEN_PRC not in ctx.price_dict:
                     update_ctx_prices(ctx, aenums.TT_OPEN_PRC, new_ltp)
-
-                # for override, set open on ctx.price_changes if it does not exist
-                if aenums.TT_OPEN_PRC not in ctx.price_changes:
-                    ctx.price_changes[aenums.TT_OPEN_PRC].append(ctx.price_dict[aenums.TT_OPEN_PRC])
 
                 # set exch time stamp
                 # note: because the exact value of the exch time stamp
@@ -257,6 +253,8 @@ class OMAPISetExpectedNonTradeDataFromFills(SetExpectedNonTradeDataFromFills):
 
         return ctx
 
-ose_price_overrides.append(Override(OMAPISetExpectedNonTradeDataFromFills))
+#ose_price_overrides.append(Override(OMAPISetExpectedNonTradeDataFromFills))
 ose_price_overrides.append(Override(WaitForLastPricesOnTradeDataUpdateNoDuplicateCallbackCheck))
 ose_price_overrides.append(Override(WaitForDirectTradeDataIgnoreOtherCallbacks))
+ose_tradestate_overrides.extend(ose_price_overrides)
+ose_tradestate_overrides.append(Override(OMAPISetExpectedNonTradeDataFromFills))

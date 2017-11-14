@@ -101,8 +101,11 @@ def get_hostinfo_member_user_id():
         parser.read([filename])
 
         for section in parser.sections():
-            if section.startswith('MEMBER_1_TTF'):
+            if section.startswith('MEMBER_1_TTO_1'):
                 _hostinfo_member_user_id = "{0}".format(parser.get(section, 'UserId'))
+            else:
+                if section.startswith('MEMBER_1_TTF'):
+                    _hostinfo_member_user_id = "{0}".format(parser.get(section, 'UserId'))
     return _hostinfo_member_user_id
 
 ###################
